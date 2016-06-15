@@ -1,0 +1,130 @@
+---
+title: "Springboard Exercise 1 - Walkthrough"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Introduction
+This document offers possible solutions to Springboard's Data Wrangling Exercise 1. Packages required are `dplyr`, `tidyr`, and `reshape2`. For questions or alternative solutions, please send me a message.
+
+In this exercise, you'll work with a toy data set showing product purchases from an electronics store. While the data set is small and simple, it still illustrates many of the challenges you have to address in real-world data wrangling! The data set and exercise are inspired by [this blog post.](http://d3-media.blogspot.nl/2013/11/how-to-refine-your-data.html)
+
+The data is located in refine_original.csv. Right away, you'll notice that the data set has a few issues:
+
+*There are four brands: Philips, Akzo, Van Houten and Unilever. However, there are many different spellings and capitalizations of those names!
+*The product code and number are combined in one column, separated by a hyphen.
+
+
+##Load the data in RStudio
+
+```{r}
+#--- load packages ---
+library(dplyr)
+library(tidyr)
+library(reshape2)
+
+#---- load data, create data frame, and view ---
+df <- read.csv('refine_original.csv')
+data <- tbl_df(df)
+data %>% View()
+```
+
+##Step 1: Clean up brand names
+Clean up the 'company' column, so all of the misspellings of the brand names are standardized. For example, you can transform the values in the column to be: philips, akzo, van houten and unilever (all lowercase).
+
+```{r}
+#--- turn company column to lower case and correct spelling ----
+data$company <- tolower(data$company)
+
+#find out how companies are mispelled. After next step, re-run this code to make sure all companies are unique
+data %>% 
+  select(company) %>% 
+  unique()
+
+#correct mispelled words
+data$company <- gsub('fillips|phillips|phllips|phlips|phillps', 'philips', data$company)
+data$company <- gsub('akz0|ak zo', 'akzo', data$company)
+data$company <- gsub('unilver', 'unilever', data$company)
+```
+
+##Step 2: Separate product code and number
+Separate the product code and product number into separate columns i.e. add two new columns called `product_code` and `product_number`, containing the product code and number respectively
+
+```{r}
+#create new columns using reshape2 (colsplit), then bind together
+product <- colsplit(data$Product.code...number, "-", c("product_code", "product_number"))
+data <- cbind(data, product)
+
+#delete old column
+data$Product.code...number = NULL
+```
+
+##Step 3: Add product categories
+You learn that the product codes actually represent the following product categories:
+
+*`p = Smartphone`
+*`v = TV`
+*`x = Laptop`
+*`q = Tablet`
+
+In order to make the data more readable, add a column with the product category for each record.
+
+```{r}
+#--- add product categories ---
+product_category <- data$product_code
+data <- cbind(data, product_category)
+
+#make sure product categories are unique. Re-run code after adding product categories
+data %>% 
+  select(product_category) %>% 
+  unique()
+
+data$product_category <- gsub('p', 'Smartphone', data$product_category)
+data$product_category <- gsub('v', 'TV', data$product_category)
+data$product_category <- gsub('x', 'Laptop', data$product_category)
+data$product_category <- gsub('q', 'Tablet', data$product_category)
+```
+
+##Step 4: Add full address for geocoding
+You'd like to view the customer information on a map. In order to do that, the addresses need to be in a form that can be easily geocoded. Create a new column full_address that concatenates the three address fields (`address`, `city`, `country`), separated by commas.
+
+```{r}
+#--- add full address for geocoding ---
+data <- mutate(data, full_address = paste(data$address, data$city, data$country, sep = ','))
+
+#remove redundant columns
+data$address = NULL
+data$city = NULL
+data$country = NULL
+```
+
+##Step 5: Create dummy variables for company and product category
+Both the company name and product category are categorical variables i.e. they take only a fixed set of values. In order to use them in further analysis you need to create dummy variables. Create dummy binary variables for each of them with the prefix `company_` and `product_` i.e.
+
+*Add four binary (1 or 0) columns for company: `company_philips`, `company_akzo`, `company_van_houten` and `company_unilever`
+*Add four binary (1 or 0) columns for product category: `product_smartphone`, `product_tv`, `product_laptop and product_tablet`
+
+```{r}
+#--- create dummy variables for company and product category ---
+#create columns and convert to binary
+company_philips <- as.numeric(data$company == 'philips')
+company_akzo <- as.numeric(data$company == 'akzo')
+company_van_houten <- as.numeric(data$company == 'van houten')
+company_unilever <- as.numeric(data$company == 'unilever')
+
+#bind columns to dataframe
+data <- cbind(data, company_philips, company_akzo, company_van_houten, company_unilever)
+
+#create columns and convert to binary
+product_smartphone <- as.numeric(data$product_category == 'Smartphone')
+product_tv <- as.numeric(data$product_category == 'TV')
+product_laptop <- as.numeric(data$product_category == 'Laptop')
+product_tablet <- as.numeric(data$product_category == 'Tablet')
+
+#bind columns to dataframe
+data <- cbind(data, product_smartphone, product_tv, product_laptop, product_tablet)
+```
+
