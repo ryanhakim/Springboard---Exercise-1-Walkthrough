@@ -12,10 +12,11 @@ This document offers possible solutions to Springboard's Data Wrangling Exercise
 
 In this exercise, you'll work with a toy data set showing product purchases from an electronics store. While the data set is small and simple, it still illustrates many of the challenges you have to address in real-world data wrangling! The data set and exercise are inspired by [this blog post.](http://d3-media.blogspot.nl/2013/11/how-to-refine-your-data.html)
 
-The data is located in refine_original.csv. Right away, you'll notice that the data set has a few issues:
+The data is located in [_refine_original.csv_](https://github.com/ryanhakim/Springboard---Exercise-1-Walkthrough/blob/master/refine_original.csv). Right away, you'll notice that the data set has a few issues:
 
-*There are four brands: Philips, Akzo, Van Houten and Unilever. However, there are many different spellings and capitalizations of those names!
-*The product code and number are combined in one column, separated by a hyphen.
+- There are four brands: Philips, Akzo, Van Houten and Unilever. However, there are many different spellings and capitalizations of those names!
+
+- The product code and number are combined in one column, separated by a hyphen.
 
 
 ##Load the data in RStudio
@@ -39,12 +40,12 @@ Clean up the 'company' column, so all of the misspellings of the brand names are
 #--- turn company column to lower case and correct spelling ----
 data$company <- tolower(data$company)
 
-#find out how companies are mispelled. After next step, re-run this code to make sure all companies are unique
+#find out how companies are misspelled. After next step, re-run this code to make sure all companies are unique
 data %>% 
   select(company) %>% 
   unique()
 
-#correct mispelled words
+#correct misspelled words
 data$company <- gsub('fillips|phillips|phllips|phlips|phillps', 'philips', data$company)
 data$company <- gsub('akz0|ak zo', 'akzo', data$company)
 data$company <- gsub('unilver', 'unilever', data$company)
@@ -65,10 +66,10 @@ data$Product.code...number = NULL
 ##Step 3: Add product categories
 You learn that the product codes actually represent the following product categories:
 
-*`p = Smartphone`
-*`v = TV`
-*`x = Laptop`
-*`q = Tablet`
+- `p = Smartphone`
+- `v = TV`
+- `x = Laptop`
+- `q = Tablet`
 
 In order to make the data more readable, add a column with the product category for each record.
 
@@ -104,8 +105,8 @@ data$country = NULL
 ##Step 5: Create dummy variables for company and product category
 Both the company name and product category are categorical variables i.e. they take only a fixed set of values. In order to use them in further analysis you need to create dummy variables. Create dummy binary variables for each of them with the prefix `company_` and `product_` i.e.
 
-*Add four binary (1 or 0) columns for company: `company_philips`, `company_akzo`, `company_van_houten` and `company_unilever`
-*Add four binary (1 or 0) columns for product category: `product_smartphone`, `product_tv`, `product_laptop and product_tablet`
+- Add four binary (1 or 0) columns for company: `company_philips`, `company_akzo`, `company_van_houten` and `company_unilever`
+- Add four binary (1 or 0) columns for product category: `product_smartphone`, `product_tv`, `product_laptop and product_tablet`
 
 ```{r}
 #--- create dummy variables for company and product category ---
@@ -127,4 +128,4 @@ product_tablet <- as.numeric(data$product_category == 'Tablet')
 #bind columns to dataframe
 data <- cbind(data, product_smartphone, product_tv, product_laptop, product_tablet)
 ```
-
+##End
